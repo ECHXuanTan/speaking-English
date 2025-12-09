@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Học Sinh - PTNK Exam System</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <h1>Hệ thống thi nói PTNK</h1>
+                </div>
+               
+            </div>
+            <div class="header-right">
+                <!-- Quick Action Buttons -->
+                <div class="header-actions">
+                    <a href="dashboard.html" class="btn btn-outline" title="Quay lại Dashboard">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="students.html" class="btn btn-primary" title="Thêm Học Sinh">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Thêm HS</span>
+                    </a>
+                    <a href="exams.html" class="btn btn-info" title="Tạo kỳ thi mới">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Quản lý Kỳ thi</span>
+                    </a>
+                </div>
+                
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    
+                </div>
+                <button class="btn btn-secondary" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Đăng Xuất
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div id="alertContainer"></div>
+            
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h2><i class="fas fa-users"></i> Quản Lý Học Sinh</h2>
+                    <p>Quản lý danh sách học sinh và tài khoản đăng nhập</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-primary" id="addStudentBtn">
+                        <i class="fas fa-user-plus"></i>
+                        Thêm Học Sinh
+                    </button>
+                    <button class="btn btn-success" id="importStudentsBtn">
+                        <i class="fas fa-file-excel"></i>
+                        Import Excel
+                    </button>
+                    <button class="btn btn-info" id="exportStudentsBtn">
+                        <i class="fas fa-download"></i>
+                        Export Excel
+                    </button>
+                    <a href="/api/supervisor/students/template" class="btn btn-outline" download>
+                        <i class="fas fa-file-download"></i>
+                        Tải Template
+                    </a>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="search-filter-section">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm theo mã học sinh hoặc tên...">
+                </div>
+                <div class="filter-controls">
+                    <select id="statusFilter" class="form-control">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="active">Đang hoạt động</option>
+                        <option value="inactive">Không hoạt động</option>
+                    </select>
+                    <button class="btn btn-outline" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        Làm mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Students Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Danh Sách Học Sinh</h3>
+                    <div class="table-info">
+                        Tổng: <span id="totalStudents">0</span> học sinh
+                    </div>
+                </div>
+                
+                <div class="table-wrapper">
+                    <table class="data-table" id="studentsTable">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllCheckbox">
+                                </th>
+                                <th>Mã Học Sinh</th>
+                                <th>Họ và Tên</th>
+                                <th>Mật Khẩu</th>
+                                <th>Ngày Tạo</th>
+                                <th>Trạng Thái</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer">
+                    <div class="bulk-actions">
+                        <button class="btn btn-warning" id="bulkDeleteBtn" disabled>
+                            <i class="fas fa-trash"></i>
+                            Xóa đã chọn
+                        </button>
+                        <button class="btn btn-secondary" id="bulkGeneratePasswordBtn" disabled>
+                            <i class="fas fa-key"></i>
+                            Tạo mật khẩu mới
+                        </button>
+                    </div>
+                    <div class="pagination" id="pagination">
+                        <!-- Dynamic pagination -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 PTNK.</p>
+        </footer>
+    </div>
+
+    <!-- Add/Edit Student Modal -->
+    <div class="modal" id="studentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm Học Sinh Mới</h3>
+                <button class="modal-close" id="closeModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="studentForm">
+                <div class="modal-body">
+                    <input type="hidden" id="studentId">
+                    
+                    <div class="form-group">
+                        <label for="studentCode">Mã Học Sinh *</label>
+                        <input type="text" id="studentCode" class="form-control" required>
+                        <small class="form-text">Mã duy nhất để xác định học sinh</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fullName">Họ và Tên *</label>
+                        <input type="text" id="fullName" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Mật Khẩu</label>
+                        <div class="password-input-group">
+                            <input type="text" id="password" class="form-control">
+                            <button type="button" class="btn btn-secondary" id="generatePasswordBtn">
+                                <i class="fas fa-random"></i>
+                                Tạo tự động
+                            </button>
+                        </div>
+                        <small class="form-text">Để trống để tạo mật khẩu tự động</small>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="saveStudentBtn">
+                        <i class="fas fa-save"></i>
+                        Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Import Danh Sách Học Sinh</h3>
+                <button class="modal-close" id="closeImportModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h4>Chọn file Excel để upload</h4>
+                    <p>Kéo thả file vào đây hoặc click để chọn</p>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+                    <small>Hỗ trợ: .xlsx, .xls (tối đa 10MB)</small>
+                </div>
+                
+                <div class="import-preview" id="importPreview" style="display: none;">
+                    <h4>Xem trước dữ liệu:</h4>
+                    <div class="preview-table-wrapper">
+                        <table class="preview-table" id="previewTable">
+                            <!-- Dynamic content -->
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelImportBtn">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirmImportBtn" disabled>
+                    <i class="fas fa-upload"></i>
+                    Import Dữ Liệu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="js/students.js"></script>
+</body>
+</html>

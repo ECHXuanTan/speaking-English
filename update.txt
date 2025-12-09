@@ -1,0 +1,666 @@
+TÀI LIỆU API & DATABASE - HỆ THỐNG THI NÓI
+📋 Tổng quan thay đổi
+Thay đổi chính: Hệ thống chuyển từ random số đề sang random mã đề với PDF Trước đây:
+Random ra một số (1, 2, 3, ..., N)
+Không có nội dung đề cụ thể
+Hiện tại:
+Random ra mã đề (DE001, DE002, ...)
+Mỗi đề có link PDF Google Drive để hiển thị nội dung
+🗄️ DATABASE SCHEMA
+1. Bảng exams (Kỳ thi)
+Thay đổi: Xóa trường total_questions
+CREATE TABLE exams (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  exam_name VARCHAR(100) NOT NULL,
+  preparation_time INTEGER NOT NULL DEFAULT 60,    -- Thời gian chuẩn bị (giây)
+  exam_duration INTEGER NOT NULL DEFAULT 300,      -- Thời gian thi (giây)
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+Ví dụ:
++----+------------------------+-----------------+---------------+---------------------+
+| id | exam_name              | preparation_time| exam_duration | created_at          |
++----+------------------------+-----------------+---------------+---------------------+
+| 1  | Speaking A1 - June 2025| 60              | 300           | 2025-01-01 10:00:00 |
++----+------------------------+-----------------+---------------+---------------------+
+2. Bảng exam_questions (Đề thi) - MỚI
+CREATE TABLE exam_questions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  exam_id INTEGER NOT NULL,
+  question_code VARCHAR(50) NOT NULL,              -- Mã đề (VD: DE001, DE002)
+  pdf_drive_url TEXT NOT NULL,                     -- Link Google Drive nhúng PDF
+  is_active BOOLEAN DEFAULT 1,                     -- 1=Active, 0=Inactive
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,
+  UNIQUE(exam_id, question_code)                   -- Mã đề unique trong 1 kỳ thi
+)
+Indexes:
+CREATE INDEX idx_exam_questions_exam ON exam_questions(exam_id);
+CREATE INDEX idx_exam_questions_code ON exam_questions(question_code);
+Ví dụ:
++----+---------+---------------+------------------------------------------+-----------+---------------------+
+| id | exam_id | question_code | pdf_drive_url                            | is_active | created_at          |
++----+---------+---------------+------------------------------------------+-----------+---------------------+
+| 1  | 1       | DE001         | https://drive.google.com/.../preview     | 1         | 2025-01-01 10:00:00 |
+| 2  | 1       | DE002         | https://drive.google.com/.../preview     | 1         | 2025-01-01 10:00:00 |
+| 3  | 1       | DE003         | https://drive.google.com/.../preview     | 0         | 2025-01-01 10:00:00 |
++----+---------+---------------+------------------------------------------+-----------+---------------------+
+3. Bảng exam_participants (Học sinh tham gia thi)
+Thay đổi: question_number (INTEGER) → question_id (INTEGER, FK)
+CREATE TABLE exam_participants (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  exam_id INTEGER NOT NULL,
+  student_id INTEGER NOT NULL,
+  question_id INTEGER,                              -- ID của đề thi được random
+  status TEXT CHECK(status IN ('waiting', 'in_progress', 'completed')) DEFAULT 'waiting',
+  audio_file_path VARCHAR(255),
+  start_time DATETIME,
+  submit_time DATETIME,
+  
+  FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+  FOREIGN KEY (question_id) REFERENCES exam_questions(id) ON DELETE SET NULL,
+  UNIQUE(exam_id, student_id)
+)
+Indexes:
+CREATE INDEX idx_exam_participants_exam ON exam_participants(exam_id);
+CREATE INDEX idx_exam_participants_student ON exam_participants(student_id);
+CREATE INDEX idx_exam_participants_question ON exam_participants(question_id);
+CREATE INDEX idx_exam_participants_status ON exam_participants(status);
+Ví dụ:
++----+---------+------------+-------------+-------------+------------------+---------------------+---------------------+
+| id | exam_id | student_id | question_id | status      | audio_file_path  | start_time          | submit_time         |
++----+---------+------------+-------------+-------------+------------------+---------------------+---------------------+
+| 1  | 1       | 10         | 2           | completed   | /path/audio.mp3  | 2025-01-01 10:00:00 | 2025-01-01 10:05:00 |
+| 2  | 1       | 11         | 1           | in_progress | NULL             | 2025-01-01 10:01:00 | NULL                |
+| 3  | 1       | 12         | NULL        | waiting     | NULL             | NULL                | NULL                |
++----+---------+------------+-------------+-------------+------------------+---------------------+---------------------+
+🔌 API ENDPOINTS
+A. QUẢN LÝ ĐỀ THI (Supervisor)
+1. Tạo đề thi đơn
+POST /api/supervisor/exams/:examId/questions
+Authorization: Bearer <supervisor_token>
+Content-Type: application/json
+
+Request Body:
+{
+  "question_code": "DE001",
+  "pdf_drive_url": "https://drive.google.com/file/d/xxx/preview",
+  "is_active": true
+}
+
+Response (201):
+{
+  "success": true,
+  "message": "Tạo đề thi thành công",
+  "data": {
+    "question": {
+      "id": 1,
+      "exam_id": 1,
+      "question_code": "DE001",
+      "pdf_drive_url": "https://drive.google.com/file/d/xxx/preview",
+      "is_active": true,
+      "created_at": "2025-01-01T00:00:00.000Z"
+    }
+  }
+}
+2. Tạo nhiều đề thi (Batch)
+POST /api/supervisor/exams/:examId/questions/batch
+Authorization: Bearer <supervisor_token>
+Content-Type: application/json
+
+Request Body:
+{
+  "questions": [
+    {
+      "question_code": "DE001",
+      "pdf_drive_url": "https://drive.google.com/file/d/xxx/preview"
+    },
+    {
+      "question_code": "DE002",
+      "pdf_drive_url": "https://drive.google.com/file/d/yyy/preview"
+    },
+    {
+      "question_code": "DE003",
+      "pdf_drive_url": "https://drive.google.com/file/d/zzz/preview"
+    }
+  ]
+}
+
+Response (201):
+{
+  "success": true,
+  "message": "Tạo đề thi thành công: 3/3",
+  "data": {
+    "success": 3,
+    "failed": 0,
+    "errors": []
+  }
+}
+3. Lấy danh sách đề thi
+GET /api/supervisor/exams/:examId/questions
+GET /api/supervisor/exams/:examId/questions?active=true
+
+Response (200):
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "questions": [
+      {
+        "id": 1,
+        "exam_id": 1,
+        "question_code": "DE001",
+        "pdf_drive_url": "https://drive.google.com/file/d/xxx/preview",
+        "is_active": true,
+        "created_at": "2025-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 2,
+        "exam_id": 1,
+        "question_code": "DE002",
+        "pdf_drive_url": "https://drive.google.com/file/d/yyy/preview",
+        "is_active": true,
+        "created_at": "2025-01-01T00:00:00.000Z"
+      }
+    ]
+  }
+}
+4. Xem thống kê sử dụng đề
+GET /api/supervisor/exams/:examId/questions/usage
+
+Response (200):
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "usage": [
+      {
+        "question": {
+          "id": 1,
+          "exam_id": 1,
+          "question_code": "DE001",
+          "pdf_drive_url": "https://drive.google.com/file/d/xxx/preview",
+          "is_active": true,
+          "created_at": "2025-01-01T00:00:00.000Z"
+        },
+        "usage_count": 15
+      },
+      {
+        "question": {
+          "id": 2,
+          "exam_id": 1,
+          "question_code": "DE002",
+          "pdf_drive_url": "https://drive.google.com/file/d/yyy/preview",
+          "is_active": true,
+          "created_at": "2025-01-01T00:00:00.000Z"
+        },
+        "usage_count": 12
+      }
+    ]
+  }
+}
+5. Lấy chi tiết một đề thi
+GET /api/supervisor/questions/:id
+
+Response (200):
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "question": {
+      "id": 1,
+      "exam_id": 1,
+      "question_code": "DE001",
+      "pdf_drive_url": "https://drive.google.com/file/d/xxx/preview",
+      "is_active": true,
+      "created_at": "2025-01-01T00:00:00.000Z",
+      "exam": {
+        "id": 1,
+        "exam_name": "Speaking A1 - June 2025",
+        "preparation_time": 60,
+        "exam_duration": 300,
+        "created_at": "2025-01-01T00:00:00.000Z"
+      }
+    }
+  }
+}
+6. Cập nhật đề thi
+PUT /api/supervisor/questions/:id
+Content-Type: application/json
+
+Request Body (all fields optional):
+{
+  "question_code": "DE001-UPDATED",
+  "pdf_drive_url": "https://drive.google.com/file/d/new-xxx/preview",
+  "is_active": false
+}
+
+Response (200):
+{
+  "success": true,
+  "message": "Cập nhật đề thi thành công",
+  "data": {
+    "question": {
+      "id": 1,
+      "exam_id": 1,
+      "question_code": "DE001-UPDATED",
+      "pdf_drive_url": "https://drive.google.com/file/d/new-xxx/preview",
+      "is_active": false,
+      "created_at": "2025-01-01T00:00:00.000Z"
+    }
+  }
+}
+7. Xóa đề thi
+DELETE /api/supervisor/questions/:id
+
+Response (200):
+{
+  "success": true,
+  "message": "Xóa đề thi thành công"
+}
+
+Error (400):
+{
+  "success": false,
+  "message": "Error",
+  "error": "Không thể xóa đề thi đã có học sinh sử dụng"
+}
+8. Bật/Tắt đề thi
+PATCH /api/supervisor/questions/:id/toggle
+Content-Type: application/json
+
+Request Body:
+{
+  "is_active": false
+}
+
+Response (200):
+{
+  "success": true,
+  "message": "Vô hiệu hóa đề thi thành công",
+  "data": {
+    "question": {
+      "id": 1,
+      "exam_id": 1,
+      "question_code": "DE001",
+      "pdf_drive_url": "https://drive.google.com/file/d/xxx/preview",
+      "is_active": false,
+      "created_at": "2025-01-01T00:00:00.000Z"
+    }
+  }
+}
+B. HỌC SINH (Student)
+9. Random đề thi
+POST /api/student/exam/:participantId/random-question
+Authorization: Bearer <student_token>
+
+Response (200):
+{
+  "success": true,
+  "message": "Random đề thi thành công",
+  "data": {
+    "participant_id": 1,
+    "question": {
+      "id": 2,
+      "exam_id": 1,
+      "question_code": "DE002",
+      "pdf_drive_url": "https://drive.google.com/file/d/yyy/preview",
+      "is_active": true,
+      "created_at": "2025-01-01T00:00:00.000Z"
+    },
+    "status": "waiting"
+  }
+}
+
+Error (400):
+{
+  "success": false,
+  "message": "Error",
+  "error": "Đã có đề thi, không thể random lại"
+}
+
+Error (500):
+{
+  "success": false,
+  "message": "Error",
+  "error": "Không tìm thấy đề thi nào cho kỳ thi này"
+}
+10. Bắt đầu thi
+POST /api/student/exam/:participantId/start
+Authorization: Bearer <student_token>
+
+Response (200):
+{
+  "success": true,
+  "message": "Bắt đầu thi thành công",
+  "data": {
+    "participant_id": 1,
+    "status": "in_progress",
+    "start_time": "2025-01-01T10:00:00.000Z",
+    "exam_duration": 300,
+    "preparation_time": 60
+  }
+}
+
+Error (400):
+{
+  "success": false,
+  "message": "Chưa thể bắt đầu thi",
+  "error": "Vui lòng random đề thi trước khi bắt đầu"
+}
+🎨 THAY ĐỔI GIAO DIỆN
+1. Trang Giám thị - Quản lý Đề thi
+Thêm trang/module mới:
+Danh sách đề thi của kỳ thi
+Form thêm đề (đơn)
+Form thêm nhiều đề (batch)
+Bật/tắt đề thi
+Xem thống kê đề nào được dùng nhiều nhất
+UI Components cần:
+// QuestionList.jsx
+<QuestionList examId={examId}>
+  {questions.map(q => (
+    <QuestionItem 
+      key={q.id}
+      code={q.question_code}
+      pdfUrl={q.pdf_drive_url}
+      isActive={q.is_active}
+      usageCount={q.usage_count}
+      onToggle={() => toggleQuestion(q.id)}
+      onEdit={() => editQuestion(q.id)}
+      onDelete={() => deleteQuestion(q.id)}
+    />
+  ))}
+</QuestionList>
+
+// CreateQuestionForm.jsx
+<CreateQuestionForm examId={examId}>
+  <input name="question_code" placeholder="Mã đề (VD: DE001)" />
+  <input name="pdf_drive_url" placeholder="Link Google Drive" />
+  <button>Tạo đề</button>
+</CreateQuestionForm>
+
+// BatchCreateForm.jsx
+<BatchCreateForm examId={examId}>
+  <textarea 
+    placeholder="Paste Excel data hoặc JSON"
+    value={batchData}
+  />
+  <button>Tạo hàng loạt</button>
+</BatchCreateForm>
+2. Trang Học sinh - Làm bài thi
+Thay đổi:
+Button "Random đề" → Hiển thị mã đề + PDF viewer
+Không còn hiển thị "Số đề: 15" → Hiển thị "Mã đề: DE015"
+UI Components cần:
+// ExamRoom.jsx (Student)
+<ExamRoom participantId={participantId}>
+  
+  {/* Bước 1: Random đề */}
+  {!question && (
+    <button onClick={handleRandomQuestion}>
+      Random đề thi
+    </button>
+  )}
+  
+  {/* Bước 2: Hiển thị đề */}
+  {question && (
+    <div>
+      <h3>Mã đề: {question.question_code}</h3>
+      
+      {/* PDF Viewer */}
+      <iframe
+        src={question.pdf_drive_url}
+        width="100%"
+        height="600px"
+        title="Đề thi"
+      />
+      
+      {/* Bắt đầu thi */}
+      {status === 'waiting' && (
+        <button onClick={handleStartExam}>
+          Bắt đầu làm bài
+        </button>
+      )}
+      
+      {/* Recording UI */}
+      {status === 'in_progress' && (
+        <RecordingPanel />
+      )}
+    </div>
+  )}
+  
+</ExamRoom>
+3. PDF Viewer Implementation
+Option 1: Google Drive Embed (Đơn giản nhất)
+<iframe
+  src={question.pdf_drive_url}
+  width="100%"
+  height="600px"
+  title="Đề thi"
+  frameBorder="0"
+/>
+Link format:
+https://drive.google.com/file/d/FILE_ID/preview
+Option 2: React PDF Viewer (Nếu muốn custom)
+npm install react-pdf
+import { Document, Page } from 'react-pdf';
+
+<Document file={pdfUrl}>
+  <Page pageNumber={1} />
+</Document>
+4. Monitoring Dashboard (Supervisor)
+Hiển thị đề của từng học sinh:
+// MonitoringTable.jsx
+<table>
+  <thead>
+    <tr>
+      <th>Mã SV</th>
+      <th>Họ tên</th>
+      <th>Mã đề</th> {/* Thay vì "Số đề" */}
+      <th>Trạng thái</th>
+      <th>Thời gian</th>
+    </tr>
+  </thead>
+  <tbody>
+    {participants.map(p => (
+      <tr key={p.id}>
+        <td>{p.student.student_code}</td>
+        <td>{p.student.full_name}</td>
+        <td>
+          {p.question ? (
+            <span className="badge">
+              {p.question.question_code}
+            </span>
+          ) : (
+            <span className="text-muted">Chưa random</span>
+          )}
+        </td>
+        <td>{p.status}</td>
+        <td>{formatTime(p.duration)}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+📝 TYPESCRIPT TYPES (Frontend)
+// types.ts
+
+export interface ExamQuestion {
+  id: number;
+  exam_id: number;
+  question_code: string;      // "DE001", "DE002"
+  pdf_drive_url: string;       // Google Drive embed URL
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Exam {
+  id: number;
+  exam_name: string;
+  preparation_time: number;    // seconds
+  exam_duration: number;       // seconds
+  created_at: string;
+}
+
+export interface ExamParticipant {
+  id: number;
+  exam_id: number;
+  student_id: number;
+  question_id?: number;        // ID của đề được random
+  status: 'waiting' | 'in_progress' | 'completed';
+  audio_file_path?: string;
+  start_time?: string;
+  submit_time?: string;
+}
+
+export interface ExamParticipantWithDetails extends ExamParticipant {
+  student: Student;
+  exam: Exam;
+  question?: ExamQuestion;     // Thông tin đề thi
+}
+
+// API Response Types
+export interface RandomQuestionResponse {
+  success: boolean;
+  message: string;
+  data: {
+    participant_id: number;
+    question: ExamQuestion;
+    status: string;
+  };
+}
+
+export interface QuestionsListResponse {
+  success: boolean;
+  message: string;
+  data: {
+    questions: ExamQuestion[];
+  };
+}
+
+export interface QuestionUsageResponse {
+  success: boolean;
+  message: string;
+  data: {
+    usage: Array<{
+      question: ExamQuestion;
+      usage_count: number;
+    }>;
+  };
+}
+🔄 WORKFLOW MỚI
+Workflow Giám thị:
+1. Tạo kỳ thi
+   POST /api/supervisor/exams
+   
+2. Thêm đề thi (batch)
+   POST /api/supervisor/exams/:examId/questions/batch
+   
+3. Thêm học sinh vào kỳ thi
+   POST /api/supervisor/exams/:examId/students/batch
+   
+4. Theo dõi học sinh làm bài
+   GET /api/supervisor/exams/:examId/monitoring
+   
+5. Xem thống kê đề
+   GET /api/supervisor/exams/:examId/questions/usage
+Workflow Học sinh:
+1. Đăng nhập
+   POST /api/auth/student/login
+   
+2. Vào phòng thi
+   GET /api/student/exams
+   
+3. Random đề
+   POST /api/student/exam/:participantId/random-question
+   ↓ Response: {question: {question_code, pdf_drive_url}}
+   
+4. Hiển thị PDF trong iframe
+   <iframe src={question.pdf_drive_url} />
+   
+5. Bắt đầu thi
+   POST /api/student/exam/:participantId/start
+   
+6. Ghi âm & Nộp bài
+   POST /api/student/exam/:participantId/submit
+⚠️ LƯU Ý QUAN TRỌNG
+1. Google Drive Link Format
+Link phải là dạng PREVIEW, không phải VIEW: ❌ SAI:
+https://drive.google.com/file/d/FILE_ID/view
+✅ ĐÚNG:
+https://drive.google.com/file/d/FILE_ID/preview
+2. Google Drive Permissions
+File PDF phải được set "Anyone with the link can view"
+3. CORS Issues
+Nếu gặp lỗi CORS, có thể cần:
+Dùng proxy server
+Hoặc download PDF về server rồi serve
+4. Validation
+Frontend nên validate:
+question_code: Không rỗng, unique
+pdf_drive_url: Đúng format Google Drive
+Đề phải có ít nhất 1 đề active trước khi học sinh vào thi
+5. Error Handling
+// Random đề
+try {
+  const response = await randomQuestion(participantId);
+  if (response.data.question) {
+    setQuestion(response.data.question);
+  }
+} catch (error) {
+  if (error.response?.data?.error === 'Không tìm thấy đề thi nào cho kỳ thi này') {
+    alert('Kỳ thi này chưa có đề. Vui lòng liên hệ giám thị.');
+  } else if (error.response?.data?.error === 'Đã có đề thi, không thể random lại') {
+    alert('Bạn đã random đề rồi!');
+  }
+}
+🚀 MIGRATION GUIDE
+Nếu có dữ liệu cũ cần migrate:
+Database đã được xóa và tạo mới, không cần migrate.
+Khi deploy lên production:
+Backup database cũ
+Xóa database cũ
+Chạy server → tự tạo schema mới
+Import lại danh sách học sinh & giám thị
+Tạo kỳ thi mới và thêm đề thi
+📞 API Testing với Postman/Thunder Client
+# 1. Login Supervisor
+POST {{baseUrl}}/api/auth/supervisor/login
+{
+  "username": "admin",
+  "password": "admin123"
+}
+# Save token
+
+# 2. Tạo kỳ thi
+POST {{baseUrl}}/api/supervisor/exams
+Authorization: Bearer {{token}}
+{
+  "exam_name": "Speaking A1 - Test",
+  "preparation_time": 60,
+  "exam_duration": 300
+}
+# Get exam_id
+
+# 3. Thêm đề thi
+POST {{baseUrl}}/api/supervisor/exams/1/questions/batch
+Authorization: Bearer {{token}}
+{
+  "questions": [
+    {"question_code": "DE001", "pdf_drive_url": "https://drive.google.com/file/d/xxx/preview"},
+    {"question_code": "DE002", "pdf_drive_url": "https://drive.google.com/file/d/yyy/preview"}
+  ]
+}
+
+# 4. Xem danh sách đề
+GET {{baseUrl}}/api/supervisor/exams/1/questions
+Authorization: Bearer {{token}}
+📦 PACKAGE DEPENDENCIES (Frontend)
+{
+  "dependencies": {
+    "axios": "^1.6.0",              // API calls
+    "react-pdf": "^7.5.0",          // PDF viewer (optional)
+    "socket.io-client": "^4.5.0"    // Real-time updates
+  }
+}

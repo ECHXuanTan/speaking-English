@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Thi Nói Trực Tuyến - PTNK</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-microphone-alt"></i>
+                <h1>Hệ Thống Thi Nói PTNK</h1>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="welcome-section">
+                <h2>Chào Mừng Đến Với Hệ Thống Thi</h2>
+                <p>Vui lòng chọn vai trò của bạn để tiếp tục</p>
+            </div>
+
+            <div class="login-options">
+                <div class="login-card" onclick="redirectTo('student')">
+                    <div class="card-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h3>Học Sinh</h3>
+                    <p>Đăng nhập để tham gia kỳ thi</p>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="login-card" onclick="redirectTo('supervisor')">
+                    <div class="card-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h3>Giám Thị</h3>
+                    <p>Quản lý kỳ thi và học sinh</p>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+
+           
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 PTNK.</p>
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

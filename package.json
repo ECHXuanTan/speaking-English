@@ -1,0 +1,72 @@
+{
+  "name": "exam-system",
+  "version": "1.0.0",
+  "description": "Hệ thống thi nói trực tuyến",
+  "main": "dist/app.js",
+  "scripts": {
+    "dev": "tsx src/app.ts",
+    "dev:backend": "nodemon",
+    "dev:frontend": "live-server public --port=8080 --host=0.0.0.0 --wait=1000 --https --cert=certs/server.crt --key=certs/server.key",
+    "dev:full": "npm run setup:cert && concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "setup:cert": "node scripts/generate-cert.js",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "pkg": "pkg dist/app.js --out-path bin",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "init-supervisor": "tsx src/scripts/initSupervisor.ts",
+    "init-db": "tsx src/scripts/initSupervisor.ts",
+    "init-db-safe": "tsx src/scripts/initDatabase.ts",
+    "reset-db": "tsx src/scripts/initSupervisor.ts"
+  },
+  "keywords": [
+    "exam",
+    "audio",
+    "recording",
+    "education"
+  ],
+  "author": "PTNK",
+  "license": "MIT",
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "express-validator": "^7.0.1",
+    "ffmpeg": "^0.0.4",
+    "ffmpeg-static": "^5.2.0",
+    "fluent-ffmpeg": "^2.1.3",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.7.4",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/archiver": "^6.0.3",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^4.17.21",
+    "@types/express-session": "^1.17.10",
+    "@types/fluent-ffmpeg": "^2.1.27",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.10.6",
+    "concurrently": "^9.2.1",
+    "https-localhost": "^4.7.1",
+    "live-server": "^1.2.2",
+    "nodemon": "^3.1.10",
+    "pkg": "^5.8.1",
+    "selfsigned": "^3.0.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "pkg": {
+    "scripts": "dist/**/*.js",
+    "assets": [
+      "public/**/*",
+      "database/**/*",
+      "node_modules/better-sqlite3/build/Release/better_sqlite3.node"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ]
+  }
+}

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Đề Thi - PTNK Exam System</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .questions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .question-card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow-medium);
+            transition: transform 0.2s;
+        }
+
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-large);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .question-code {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .question-status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .question-status-badge.active {
+            background: var(--success-light);
+            color: var(--success-color);
+        }
+
+        .question-status-badge.inactive {
+            background: var(--error-light);
+            color: var(--error-color);
+        }
+
+        .question-pdf-preview {
+            width: 100%;
+            height: 200px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin: 15px 0;
+            background: #f5f5f5;
+        }
+
+        .question-usage {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 10px 0;
+        }
+
+        .question-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .batch-input-section {
+            background: var(--info-background);
+            border: 1px solid var(--info-border);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .batch-input-section textarea {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .pdf-url-input {
+            font-family: 'Courier New', monospace;
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow-small);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <h1>Quản Lý Đề Thi</h1>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="header-actions">
+                    <a href="exams.html" class="btn btn-outline" title="Quay lại">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Quay lại</span>
+                    </a>
+                </div>
+                <button class="btn btn-secondary" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Đăng Xuất
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div id="alertContainer"></div>
+
+            <!-- Exam Info Section -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h2><i class="fas fa-file-alt"></i> <span id="examName">Đang tải...</span></h2>
+                    <p id="examDescription">Quản lý các đề thi cho kỳ thi này</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-primary" id="createQuestionBtn">
+                        <i class="fas fa-plus-circle"></i>
+                        Thêm Đề Thi
+                    </button>
+                    <button class="btn btn-success" id="batchCreateBtn">
+                        <i class="fas fa-layer-group"></i>
+                        Thêm Hàng Loạt
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalQuestions">0</div>
+                    <div class="stat-label">Tổng số đề</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="activeQuestions">0</div>
+                    <div class="stat-label">Đề đang kích hoạt</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalUsage">0</div>
+                    <div class="stat-label">Lượt sử dụng</div>
+                </div>
+            </div>
+
+            <!-- Questions Grid -->
+            <div class="questions-grid" id="questionsGrid">
+                <!-- Dynamic content -->
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 PTNK.</p>
+        </footer>
+    </div>
+
+    <!-- Create/Edit Question Modal -->
+    <div class="modal" id="questionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm Đề Thi</h3>
+                <button class="modal-close" id="closeModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="questionForm">
+                <div class="modal-body">
+                    <input type="hidden" id="questionId">
+
+                    <div class="form-group">
+                        <label for="questionCode">Mã Đề *</label>
+                        <input type="text" id="questionCode" class="form-control" required placeholder="VD: DE001, DE002">
+                        <small class="form-text">Mã đề phải là duy nhất trong kỳ thi này</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pdfDriveUrl">Link Google Drive PDF *</label>
+                        <input type="text" id="pdfDriveUrl" class="form-control pdf-url-input" required
+                               placeholder="https://drive.google.com/file/d/FILE_ID/preview">
+                        <small class="form-text">Link phải có dạng: <code>/preview</code> ở cuối (không phải <code>/view</code>)</small>
+                    </div>
+
+                    <!-- PDF Preview -->
+                    <div class="form-group">
+                        <label>Xem trước PDF</label>
+                        <button type="button" class="btn btn-outline btn-sm" id="previewPdfBtn">
+                            <i class="fas fa-eye"></i>
+                            Xem trước
+                        </button>
+                        <div id="pdfPreviewContainer" style="display: none; margin-top: 10px;">
+                            <iframe id="pdfPreview" class="question-pdf-preview" frameborder="0"></iframe>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="isActive">Trạng Thái</label>
+                        <select id="isActive" class="form-control">
+                            <option value="true">Kích hoạt</option>
+                            <option value="false">Vô hiệu hóa</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="saveQuestionBtn">
+                        <i class="fas fa-save"></i>
+                        Lưu Đề Thi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Batch Create Modal -->
+    <div class="modal" id="batchModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>Thêm Đề Thi Hàng Loạt</h3>
+                <button class="modal-close" id="closeBatchModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="batchForm">
+                <div class="modal-body">
+                    <div class="batch-input-section">
+                        <h4><i class="fas fa-info-circle"></i> Hướng dẫn</h4>
+                        <p>Nhập danh sách đề thi theo format JSON:</p>
+                        <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto;">
+[
+  {
+    "question_code": "DE001",
+    "pdf_drive_url": "https://drive.google.com/file/d/xxx/preview"
+  },
+  {
+    "question_code": "DE002",
+    "pdf_drive_url": "https://drive.google.com/file/d/yyy/preview"
+  }
+]</pre>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="batchData">Dữ liệu JSON *</label>
+                        <textarea id="batchData" class="form-control" rows="10" required placeholder="Paste JSON data..."></textarea>
+                    </div>
+
+                    <div id="batchValidationResult"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="validateBatchBtn">
+                        <i class="fas fa-check-circle"></i>
+                        Kiểm tra dữ liệu
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="cancelBatchBtn">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="saveBatchBtn">
+                        <i class="fas fa-upload"></i>
+                        Tạo Hàng Loạt
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="js/exam-questions.js"></script>
+</body>
+</html>

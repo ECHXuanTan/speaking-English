@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Microphone - PTNK Exam System</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .mic-test-page {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .test-container {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--shadow-medium);
+            margin-bottom: 30px;
+        }
+        
+        .mic-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+        
+        .mic-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+        
+        .mic-icon.recording {
+            color: var(--error-color);
+            animation: pulse 1s infinite;
+        }
+        
+        .mic-icon.ready {
+            color: var(--success-color);
+        }
+        
+        .mic-icon.inactive {
+            color: var(--secondary-color);
+        }
+        
+        .waveform-container {
+            width: 300px;
+            height: 80px;
+            background-color: var(--background-color);
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .waveform {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            height: 100%;
+            width: 100%;
+        }
+        
+        .wave-bar {
+            width: 3px;
+            background: linear-gradient(0deg, var(--primary-color) 0%, var(--success-color) 50%, var(--warning-color) 100%);
+            border-radius: 2px;
+            transition: height 0.1s ease;
+            min-height: 4px;
+            height: 4px;
+        }
+        
+        .wave-bar.active {
+            animation: wave-pulse 0.3s ease-in-out;
+        }
+        
+        @keyframes wave-pulse {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.5); }
+        }
+        
+        .audio-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+        
+        .test-recordings {
+            margin-top: 30px;
+        }
+        
+        .recording-item {
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--border-color);
+        }
+        
+        .recording-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .recording-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .audio-player {
+            width: 250px;
+        }
+        
+        .permission-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .permission-warning i {
+            font-size: 48px;
+            color: var(--warning-color);
+            margin-bottom: 15px;
+        }
+        
+        .instructions {
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .instructions h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        
+        .status-ready {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+        
+        .status-recording {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+        
+        .status-inactive {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--secondary-color);
+            border: 1px solid var(--secondary-color);
+        }
+
+        @media (max-width: 768px) {
+            .test-container {
+                padding: 20px;
+            }
+            
+            .mic-icon {
+                font-size: 60px;
+            }
+            
+            .waveform-container {
+                width: 250px;
+                height: 60px;
+            }
+            
+            .audio-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .recording-item {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .audio-player {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-microphone"></i>
+                <h1>Test Microphone</h1>
+            </div>
+            <p class="subtitle">Kiểm tra thiết bị ghi âm trước khi thi</p>
+        </header>
+
+        <main class="main-content mic-test-page">
+            <div id="alertContainer"></div>
+
+            <!-- Permission Warning (hidden by default) -->
+            <div id="permissionWarning" class="permission-warning hidden">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Cần Cấp Quyền Microphone</h3>
+                <p>Để sử dụng tính năng này, bạn cần cho phép trình duyệt truy cập microphone.</p>
+                <button class="btn btn-warning" onclick="requestMicPermission()">
+                    <i class="fas fa-microphone"></i>
+                    Cấp Quyền Microphone
+                </button>
+            </div>
+
+            <!-- Main Test Container -->
+            <div class="test-container">
+                <div class="text-center">
+                    <div class="status-indicator status-inactive" id="micStatus">
+                        <i class="fas fa-circle"></i>
+                        <span>Microphone chưa sẵn sàng</span>
+                    </div>
+                </div>
+
+                <div class="mic-visual">
+                    <i class="fas fa-microphone mic-icon inactive" id="micIcon"></i>
+                    <div class="waveform-container">
+                        <div class="waveform" id="waveform">
+                            <!-- Waveform bars will be generated by JavaScript -->
+                        </div>
+                    </div>
+                    <p id="audioStatus">Chưa có tín hiệu âm thanh</p>
+                </div>
+
+                <div class="audio-controls">
+                                    <button class="btn btn-primary" id="startRecordBtn" onclick="startRecording()" disabled>
+                    <i class="fas fa-microphone"></i>
+                    Test Mic
+                </button>
+                    
+                    <button class="btn btn-danger hidden" id="stopRecordBtn" onclick="stopRecording()" disabled>
+                        <i class="fas fa-stop"></i>
+                        Dừng Ghi
+                    </button>
+                </div>
+
+                <!-- Recording List -->
+                <div class="test-recordings">
+                    <h3><i class="fas fa-list"></i> Bản Ghi Thử Nghiệm</h3>
+                    <div id="recordingsList">
+                        <p class="text-center text-secondary">Chưa có bản ghi nào. Hãy bắt đầu test microphone!</p>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Navigation -->
+            <div class="text-center mt-4">
+                <a href="/student/dashboard.html" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Quay Lại Dashboard
+                </a>
+                
+                <button class="btn btn-success" id="completeTestBtn" onclick="completeTest()" disabled>
+                    <i class="fas fa-check"></i>
+                    Hoàn Thành Test
+                </button>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 PTNK.</p>
+        </footer>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="js/microphone-test.js"></script>
+</body>
+</html>

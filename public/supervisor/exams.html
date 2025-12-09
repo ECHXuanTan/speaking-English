@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Kỳ Thi - PTNK Exam System</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <h1>Hệ thống thi nói PTNK</h1>
+                </div>
+               
+            </div>
+            <div class="header-right">
+                <!-- Quick Action Buttons -->
+                <div class="header-actions">
+                    <a href="dashboard.html" class="btn btn-outline" title="Quay lại Dashboard">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="students.html" class="btn btn-primary" title="Thêm Học Sinh">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Thêm HS</span>
+                    </a>
+                    <a href="exams.html" class="btn btn-info" title="Tạo kỳ thi mới">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Quản lý Kỳ thi</span>
+                    </a>
+                </div>
+                
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    
+                </div>
+                <button class="btn btn-secondary" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Đăng Xuất
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div id="alertContainer"></div>
+            
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h2><i class="fas fa-file-alt"></i> Quản Lý Kỳ Thi</h2>
+                    <p>Tạo và quản lý các kỳ thi, phân công học sinh</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-primary" id="createExamBtn">
+                        <i class="fas fa-plus-circle"></i>
+                        Tạo Kỳ Thi Mới
+                    </button>
+                    <button class="btn btn-info" id="exportExamsBtn">
+                        <i class="fas fa-download"></i>
+                        Export Danh Sách
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="search-filter-section">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm kỳ thi...">
+                </div>
+                <div class="filter-controls">
+                    <select id="statusFilter" class="form-control">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="draft">Nháp</option>
+                        <option value="active">Đang diễn ra</option>
+                        <option value="completed">Hoàn thành</option>
+                    </select>
+                    <button class="btn btn-outline" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        Làm mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Exams Grid -->
+            <div class="exams-grid" id="examsGrid">
+                <!-- Dynamic content -->
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 PTNK.</p>
+        </footer>
+    </div>
+
+    <!-- Create/Edit Exam Modal -->
+    <div class="modal" id="examModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Tạo Kỳ Thi Mới</h3>
+                <button class="modal-close" id="closeModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="examForm">
+                <div class="modal-body">
+                    <input type="hidden" id="examId">
+                    
+                    <div class="form-group">
+                        <label for="examName">Tên Kỳ Thi *</label>
+                        <input type="text" id="examName" class="form-control" required>
+                        <small class="form-text">Ví dụ: Thi nói tiếng Anh lớp 12A1</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="preparationTime">Thời Gian Chuẩn Bị (giây) *</label>
+                            <input type="number" id="preparationTime" class="form-control" min="30" max="300" value="60" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="examDuration">Thời Gian Thi (giây) *</label>
+                            <input type="number" id="examDuration" class="form-control" min="60" max="1800" value="300" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="examStatus">Trạng Thái</label>
+                        <select id="examStatus" class="form-control">
+                            <option value="draft">Nháp</option>
+                            <option value="active">Kích hoạt</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Mô Tả</label>
+                        <textarea id="description" class="form-control" rows="3" placeholder="Mô tả chi tiết về kỳ thi..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="saveExamBtn">
+                        <i class="fas fa-save"></i>
+                        Lưu Kỳ Thi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assign Students Modal -->
+    <div class="modal" id="assignStudentsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Phân Công Học Sinh</h3>
+                <button class="modal-close" id="closeAssignModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="exam-info-section">
+                    <h4 id="examInfoTitle">Kỳ Thi: </h4>
+                    <p id="examInfoDescription"></p>
+                </div>
+
+                <div class="students-selection">
+                    <div class="selection-header">
+                        <h5>Chọn Học Sinh Tham Gia:</h5>
+                        <div class="selection-actions">
+                            <button type="button" class="btn btn-sm btn-outline" id="selectAllStudentsBtn">
+                                Chọn tất cả
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline" id="clearSelectionBtn">
+                                Bỏ chọn
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="students-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="studentSearchInput" placeholder="Tìm kiếm học sinh...">
+                    </div>
+
+                    <div class="students-list" id="studentsList">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelAssignBtn">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirmAssignBtn">
+                    <i class="fas fa-user-plus"></i>
+                    Phân Công (<span id="selectedCount">0</span>)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="js/exams.js"></script>
+</body>
+</html>

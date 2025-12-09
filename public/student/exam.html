@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Làm Bài Thi - PTNK Exam System</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Prevent navigation away from exam page */
+        body {
+            overflow: hidden;
+        }
+        
+        /* Exam specific styles */
+        .exam-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--background-color);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .exam-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .exam-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .exam-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+
+        
+        .exam-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        .exam-info-card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-medium);
+            text-align: center;
+        }
+        
+        .question-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .exam-instructions {
+            background: var(--info-background);
+            border: 1px solid var(--info-border);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .phase-container {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--shadow-medium);
+            text-align: center;
+        }
+        
+        .phase-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        .countdown-display {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 30px 0;
+            color: var(--primary-color);
+        }
+        
+        .countdown-display.warning {
+            color: var(--warning-color);
+        }
+        
+        .countdown-display.danger {
+            color: var(--error-color);
+        }
+        
+        .recording-controls {
+            margin-top: 30px;
+        }
+        
+        .recording-status {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+        
+        .recording-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+        }
+        
+        .recording-indicator.recording {
+            background: var(--error-color);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+        }
+        
+        .submit-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .blur-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: var(--card-background);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            max-width: 500px;
+            margin: 20px;
+        }
+
+        /* Exam Waveform Styles */
+        .exam-waveform-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .exam-waveform-container .waveform {
+            display: flex;
+            justify-content: center;
+            align-items: end;
+            gap: 3px;
+            height: 60px;
+            margin: 15px auto;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: fit-content;
+            min-width: 300px;
+        }
+
+        .exam-waveform-container .wave-bar {
+            width: 4px;
+            min-height: 4px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 2px;
+            transition: all 0.1s ease;
+        }
+
+        .exam-waveform-container .wave-bar.active {
+            background: linear-gradient(to top, 
+                rgba(16, 185, 129, 0.8) 0%, 
+                rgba(16, 185, 129, 0.9) 30%, 
+                rgba(52, 211, 153, 1) 60%, 
+                rgba(34, 197, 94, 1) 100%);
+            animation: wave-pulse 0.4s ease-in-out;
+            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+        }
+
+        @keyframes wave-pulse {
+            0%, 100% { 
+                transform: scaleY(1) scaleX(1);
+            }
+            50% { 
+                transform: scaleY(1.6) scaleX(1.1);
+            }
+        }
+
+        #examAudioStatus {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            margin: 10px 0 0 0;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .exam-waveform-container .waveform {
+                min-width: 250px;
+                height: 50px;
+            }
+            
+            .exam-waveform-container .wave-bar {
+                width: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Prevent back navigation warning -->
+    <div id="navigationWarning" class="blur-overlay hidden">
+        <div class="modal-content">
+            <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
+            <h3>Cảnh báo!</h3>
+            <p>Bạn không được phép rời khỏi trang thi trong quá trình làm bài.</p>
+            <button class="btn btn-primary" onclick="closeNavigationWarning()">
+                <i class="fas fa-check"></i>
+                Tôi hiểu
+            </button>
+        </div>
+    </div>
+
+    <!-- Main exam container -->
+    <div class="exam-container" id="examContainer">
+        <!-- Exam Header -->
+        <header class="exam-header">
+            <div class="exam-title">
+                <i class="fas fa-clipboard-check"></i>
+                <div>
+                    <h1 id="examTitle">Đang tải...</h1>
+                    <small id="studentInfo">Học sinh: --</small>
+                </div>
+            </div>
+            <div class="exam-status">
+                <div id="currentPhase" class="badge badge-info">Đang chuẩn bị</div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="exam-main" id="examMain">
+            <div id="alertContainer"></div>
+
+            <!-- Loading Phase -->
+            <div id="loadingPhase" class="phase-container">
+                <div class="phase-title">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Đang tải thông tin bài thi...
+                </div>
+                <p>Vui lòng đợi trong giây lát</p>
+            </div>
+
+            <!-- Exam Info Phase -->
+            <div id="examInfoPhase" class="hidden">
+                <div class="exam-info-card">
+                    <h2>Thông Tin Bài Thi</h2>
+                    <div class="exam-details">
+                        <p><strong>Tên kỳ thi:</strong> <span id="examName">--</span></p>
+                        <p><strong>Thời gian chuẩn bị:</strong> <span id="preparationTime">--</span> phút</p>
+                        <p><strong>Thời gian làm bài:</strong> <span id="examDuration">--</span> phút</p>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <button class="btn btn-primary btn-lg" id="randomQuestionBtn" onclick="randomQuestion()">
+                            <i class="fas fa-random"></i>
+                            Random Đề Thi
+                        </button>
+                    </div>
+
+                    <!-- Question Info after random -->
+                    <div id="questionInfoSection" class="hidden" style="margin-top: 20px;">
+                        <div class="question-number">
+                            Mã đề: <span id="questionCode">--</span>
+                        </div>
+
+                        <!-- PDF Viewer -->
+                        <div style="margin: 20px 0;">
+                            <h3><i class="fas fa-file-pdf"></i> Nội dung đề thi</h3>
+                            <iframe id="pdfViewer" width="100%" height="500px" frameborder="0" style="border: 2px solid var(--border-color); border-radius: var(--border-radius);"></iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="exam-instructions">
+                    <h3><i class="fas fa-info-circle"></i> Hướng dẫn làm bài</h3>
+                    <ul style="text-align: left; max-width: 600px; margin: 0 auto;">
+                        <li>Bạn sẽ có <strong id="prepTimeText">--</strong> phút để chuẩn bị</li>
+                        <li>Sau đó sẽ có <strong id="examTimeText">--</strong> phút để ghi âm bài làm</li>
+                        <li>Hệ thống sẽ tự động ghi âm và nộp bài khi hết thời gian</li>
+                        <li>Bạn có thể nộp bài sớm nếu đã hoàn thành</li>
+                        <li><strong>Không được rời khỏi trang thi trong quá trình làm bài</strong></li>
+                    </ul>
+                </div>
+
+                <div class="phase-container">
+                    <button class="btn btn-primary btn-lg" id="startExamBtn" onclick="confirmStartExam()" disabled>
+                        <i class="fas fa-play"></i>
+                        Bắt Đầu Làm Bài
+                    </button>
+                    <small class="form-text">Vui lòng random đề thi trước</small>
+                </div>
+            </div>
+
+            <!-- Preparation Phase -->
+            <div id="preparationPhase" class="phase-container hidden">
+                <div class="phase-title">
+                    <i class="fas fa-book-open"></i>
+                    Thời Gian Chuẩn Bị
+                </div>
+                <div class="question-number">
+                    Mã đề: <span id="prepQuestionCode">--</span>
+                </div>
+
+                <!-- PDF Viewer in Preparation -->
+                <div style="margin: 20px 0;">
+                    <iframe id="prepPdfViewer" width="100%" height="400px" frameborder="0" style="border: 2px solid var(--border-color); border-radius: var(--border-radius);"></iframe>
+                </div>
+
+                <div class="countdown-display" id="preparationCountdown">
+                    05:00
+                </div>
+                <p>Hãy suy nghĩ và chuẩn bị nội dung trước khi bắt đầu ghi âm</p>
+                
+                <div class="early-start-section" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                    <p class="text-secondary">Đã sẵn sàng? Bạn có thể bắt đầu ghi âm ngay bây giờ</p>
+                    <button class="btn btn-success" id="earlyStartBtn" onclick="confirmEarlyStart()">
+                        <i class="fas fa-play"></i>
+                        Bắt Đầu Ghi Âm Sớm
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recording Phase -->
+            <div id="recordingPhase" class="phase-container hidden">
+                <div class="phase-title">
+                    <i class="fas fa-microphone"></i>
+                    Đang Ghi Âm Bài Làm
+                </div>
+                <div class="question-number">
+                    Mã đề: <span id="recordQuestionCode">--</span>
+                </div>
+
+                <!-- PDF Viewer in Recording -->
+                <div style="margin: 20px 0;">
+                    <iframe id="recordPdfViewer" width="100%" height="300px" frameborder="0" style="border: 2px solid var(--border-color); border-radius: var(--border-radius);"></iframe>
+                </div>
+
+                <div class="countdown-display" id="recordingCountdown">
+                    05:00
+                </div>
+                
+                <div class="recording-status">
+                    <div class="recording-indicator recording" id="recordingIndicator"></div>
+                    <span>Đang ghi âm...</span>
+                </div>
+
+                <!-- Audio Waveform Visualization -->
+                <div class="exam-waveform-container">
+                    <div class="waveform" id="examWaveform">
+                        <!-- Waveform bars will be generated by JavaScript -->
+                    </div>
+                    <p id="examAudioStatus">Chưa có tín hiệu âm thanh</p>
+                </div>
+
+                <div class="submit-section">
+                    <p class="text-secondary">Bạn có thể nộp bài sớm nếu đã hoàn thành</p>
+                    <button class="btn btn-success" id="earlySubmitBtn" onclick="confirmEarlySubmit()">
+                        <i class="fas fa-check"></i>
+                        Nộp Bài Sớm
+                    </button>
+                </div>
+            </div>
+
+            <!-- Submitting Phase -->
+            <div id="submittingPhase" class="phase-container hidden">
+                <div class="phase-title">
+                    <i class="fas fa-upload"></i>
+                    Đang Nộp Bài...
+                </div>
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                </div>
+                <p>Vui lòng đợi, hệ thống đang xử lý bài làm của bạn</p>
+            </div>
+
+            <!-- Completed Phase -->
+            <div id="completedPhase" class="phase-container hidden">
+                <div class="phase-title text-success">
+                    <i class="fas fa-check-circle"></i>
+                    Nộp Bài Thành Công!
+                </div>
+                <div class="exam-results">
+                    <p><strong>Mã đề:</strong> <span id="completedQuestionCode">--</span></p>
+                    <p><strong>Thời gian nộp:</strong> <span id="submitTime">--</span></p>
+                    <p><strong>Trạng thái:</strong> <span class="text-success">Đã hoàn thành</span></p>
+                </div>
+                <div style="margin-top: 30px;">
+                    <button class="btn btn-primary" onclick="returnToDashboard()">
+                        <i class="fas fa-home"></i>
+                        Quay Về Dashboard
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="blur-overlay hidden">
+        <div class="modal-content">
+            <h3 id="confirmTitle">Xác nhận</h3>
+            <p id="confirmMessage">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+            <div style="margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">
+                    <i class="fas fa-times"></i>
+                    Hủy
+                </button>
+                <button class="btn btn-primary" id="confirmBtn" onclick="executeConfirmedAction()">
+                    <i class="fas fa-check"></i>
+                    Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/exam.js"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập Học Sinh - PTNK Exam System</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-user-graduate"></i>
+                <h1>Đăng Nhập Học Sinh</h1>
+            </div>
+            <p class="subtitle">Nhập thông tin để tham gia kỳ thi</p>
+        </header>
+
+        <main class="main-content">
+            <div id="alertContainer"></div>
+            
+            <div class="form-container">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="studentCode">
+                            <i class="fas fa-id-card"></i>
+                            Mã Học Sinh
+                        </label>
+                        <input 
+                            type="text" 
+                            id="studentCode" 
+                            class="form-control" 
+                            placeholder="Nhập mã học sinh"
+                            required
+                            autocomplete="username"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i>
+                            Mật Khẩu
+                        </label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            class="form-control" 
+                            placeholder="Nhập mật khẩu"
+                            required
+                            autocomplete="current-password"
+                        >
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Đăng Nhập
+                    </button>
+                </form>
+
+                <div class="form-footer">
+                    <a href="/" class="btn btn-secondary btn-full mt-3">
+                        <i class="fas fa-arrow-left"></i>
+                        Quay Lại Trang Chủ
+                    </a>
+                </div>
+            </div>
+
+
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 PTNK.</p>
+        </footer>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuyển Đổi Link Google Drive - PTNK</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .converter-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-large);
+        }
+
+        .converter-title {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+
+        .input-section, .output-section {
+            margin: 20px 0;
+        }
+
+        .input-section label, .output-section label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .input-section input, .output-section input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .output-section input {
+            background: #f0f9ff;
+            border-color: var(--success-color);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .preview-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: var(--border-radius);
+        }
+
+        .preview-section iframe {
+            width: 100%;
+            height: 500px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+        }
+
+        .instructions {
+            background: var(--info-background);
+            border: 1px solid var(--info-border);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .instructions h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+        }
+
+        .example-box {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .example-box code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            color: #d63384;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin: 15px 0;
+        }
+
+        .alert-success {
+            background: var(--success-light);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+        }
+
+        .alert-error {
+            background: var(--error-light);
+            border: 1px solid var(--error-color);
+            color: var(--error-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="converter-container">
+            <h1 class="converter-title">
+                <i class="fas fa-link"></i>
+                Chuyển Đổi Link Google Drive
+            </h1>
+
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> Hướng dẫn:</h3>
+                <ol>
+                    <li>Upload file PDF lên Google Drive</li>
+                    <li>Click chuột phải → <strong>"Get link"</strong> hoặc <strong>"Share"</strong></li>
+                    <li>Đặt quyền: <strong>"Anyone with the link"</strong> - <strong>"Viewer"</strong></li>
+                    <li>Copy link và paste vào ô bên dưới</li>
+                    <li>Click <strong>"Chuyển Đổi"</strong></li>
+                </ol>
+
+                <div class="example-box">
+                    <strong>Ví dụ link gốc:</strong><br>
+                    <code>https://drive.google.com/file/d/1AbCdEfGh.../view?usp=sharing</code>
+                </div>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <div class="input-section">
+                <label for="originalLink">
+                    <i class="fas fa-paste"></i>
+                    Paste Link Google Drive Gốc:
+                </label>
+                <input
+                    type="text"
+                    id="originalLink"
+                    placeholder="https://drive.google.com/file/d/FILE_ID/view?usp=sharing"
+                    autocomplete="off">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary btn-lg" onclick="convertLink()">
+                    <i class="fas fa-sync-alt"></i>
+                    Chuyển Đổi
+                </button>
+                <button class="btn btn-outline" onclick="clearAll()">
+                    <i class="fas fa-eraser"></i>
+                    Xóa
+                </button>
+            </div>
+
+            <div class="output-section" id="outputSection" style="display: none;">
+                <label for="embedLink">
+                    <i class="fas fa-check-circle"></i>
+                    Link Nhúng (Dùng link này):
+                </label>
+                <input
+                    type="text"
+                    id="embedLink"
+                    readonly
+                    onclick="this.select()">
+
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-success" onclick="copyToClipboard()">
+                        <i class="fas fa-copy"></i>
+                        Copy Link
+                    </button>
+                    <button class="btn btn-info" onclick="showPreview()">
+                        <i class="fas fa-eye"></i>
+                        Xem Trước
+                    </button>
+                </div>
+            </div>
+
+            <div class="preview-section" id="previewSection" style="display: none;">
+                <h3><i class="fas fa-file-pdf"></i> Xem Trước PDF:</h3>
+                <iframe id="pdfPreview" frameborder="0"></iframe>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <a href="exams.html" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i>
+                    Quay Lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showAlert(message, type = 'success') {
+            const container = document.getElementById('alertContainer');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+            container.innerHTML = `
+                <div class="alert ${alertClass}">
+                    <i class="fas ${icon}"></i>
+                    ${message}
+                </div>
+            `;
+
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        function extractFileId(url) {
+            // Pattern 1: /file/d/FILE_ID/view
+            let match = url.match(/\/file\/d\/([^\/\?]+)/);
+            if (match) return match[1];
+
+            // Pattern 2: /open?id=FILE_ID
+            match = url.match(/[?&]id=([^&]+)/);
+            if (match) return match[1];
+
+            return null;
+        }
+
+        function convertLink() {
+            const input = document.getElementById('originalLink').value.trim();
+
+            if (!input) {
+                showAlert('Vui lòng nhập link Google Drive!', 'error');
+                return;
+            }
+
+            if (!input.includes('drive.google.com')) {
+                showAlert('Link không hợp lệ! Vui lòng nhập link Google Drive.', 'error');
+                return;
+            }
+
+            const fileId = extractFileId(input);
+
+            if (!fileId) {
+                showAlert('Không thể tìm thấy FILE_ID trong link! Vui lòng kiểm tra lại.', 'error');
+                return;
+            }
+
+            const embedLink = `https://drive.google.com/file/d/${fileId}/preview`;
+
+            document.getElementById('embedLink').value = embedLink;
+            document.getElementById('outputSection').style.display = 'block';
+
+            showAlert('✅ Chuyển đổi thành công! Sử dụng link bên dưới để nhúng PDF.', 'success');
+        }
+
+        function copyToClipboard() {
+            const embedLink = document.getElementById('embedLink');
+            embedLink.select();
+            embedLink.setSelectionRange(0, 99999); // For mobile
+
+            try {
+                document.execCommand('copy');
+                showAlert('✅ Đã copy link vào clipboard!', 'success');
+            } catch (err) {
+                // Fallback for modern browsers
+                navigator.clipboard.writeText(embedLink.value).then(() => {
+                    showAlert('✅ Đã copy link vào clipboard!', 'success');
+                }).catch(() => {
+                    showAlert('❌ Không thể copy. Vui lòng copy thủ công.', 'error');
+                });
+            }
+        }
+
+        function showPreview() {
+            const embedLink = document.getElementById('embedLink').value;
+
+            if (!embedLink) {
+                showAlert('Vui lòng chuyển đổi link trước!', 'error');
+                return;
+            }
+
+            document.getElementById('pdfPreview').src = embedLink;
+            document.getElementById('previewSection').style.display = 'block';
+
+            // Scroll to preview
+            document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearAll() {
+            document.getElementById('originalLink').value = '';
+            document.getElementById('embedLink').value = '';
+            document.getElementById('outputSection').style.display = 'none';
+            document.getElementById('previewSection').style.display = 'none';
+            document.getElementById('alertContainer').innerHTML = '';
+        }
+
+        // Auto convert on Enter key
+        document.getElementById('originalLink').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                convertLink();
+            }
+        });
+
+        // Auto convert on paste
+        document.getElementById('originalLink').addEventListener('paste', function() {
+            setTimeout(() => {
+                convertLink();
+            }, 100);
+        });
+    </script>
+</body>
+</html>
