@@ -119,7 +119,7 @@ function displayExams(exams) {
                 <div class="exam-info">
                     <div class="info-item">
                         <i class="fas fa-list-ol"></i>
-                        <span>Số đề: ${exam.question_number ? exam.question_number : 'Chưa bốc đề'}</span>
+                        <span>Mã đề: ${exam.question ? exam.question.question_code : 'Chưa bốc đề'}</span>
                     </div>
                     <div class="info-item">
                         <i class="fas fa-clock"></i>
@@ -165,7 +165,7 @@ function getExamStatusText(status) {
 function getExamActions(exam) {
     switch (exam.status) {
         case 'waiting':
-            if (!exam.question_number) {
+            if (!exam.question) {
                 // Chưa random đề
                 return `
                     <button class="btn btn-info" onclick="randomQuestion(${exam.participant_id})">
@@ -209,10 +209,10 @@ async function randomQuestion(participantId) {
         const response = await Utils.apiRequest(`/api/student/exam/${participantId}/random-question`, {
             method: 'POST'
         });
-        
+
         if (response.success) {
-            Utils.showAlert(`Đã random thành công! Số đề: ${response.data.question_number}`, 'success');
-            loadExams(); // Refresh exam list to show new question number
+            Utils.showAlert(`Đã random thành công! Mã đề: ${response.data.question.question_code}`, 'success');
+            loadExams(); // Refresh exam list to show new question
         } else {
             Utils.showAlert(response.error || 'Lỗi random đề thi', 'error');
         }

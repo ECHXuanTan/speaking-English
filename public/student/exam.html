@@ -57,6 +57,7 @@
             flex-direction: column;
             padding: 30px;
             overflow-y: auto;
+            overflow-x: auto;
         }
         
         .exam-info-card {
@@ -69,7 +70,7 @@
         }
         
         .question-number {
-            font-size: 3rem;
+            font-size: 2rem;
             font-weight: bold;
             color: var(--primary-color);
             margin-bottom: 10px;
@@ -89,16 +90,64 @@
             padding: 40px;
             box-shadow: var(--shadow-medium);
             text-align: center;
+            max-width: 1250px;
+            margin: 0 auto;
+            width: 100%;
         }
-        
+
+        /* Two-column layout for exam phases */
+        .phase-container.two-column {
+            display: flex;
+            gap: 0;
+            padding: 0;
+            height: calc(100vh - 120px);
+            max-height: calc(100vh - 120px);
+            max-width: 1250px;
+            width: 100%;
+        }
+
+        .phase-left-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+            min-width: 280px;
+            max-width: 380px;
+        }
+
+        .phase-right-content {
+            flex: 12;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            background: transparent;
+        }
+
+        .phase-right-content .pdf-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            max-width: 100%;
+            width: 100%;
+        }
+
+        .phase-right-content .pdf-container iframe {
+            flex: 1;
+            height: 100% !important;
+            min-height: 500px;
+        }
+
         .phase-title {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             margin-bottom: 20px;
             color: var(--primary-color);
         }
-        
+
         .countdown-display {
-            font-size: 4rem;
+            font-size: 2.5rem;
             font-weight: bold;
             margin: 30px 0;
             color: var(--primary-color);
@@ -122,9 +171,9 @@
             align-items: center;
             gap: 10px;
             margin-bottom: 20px;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
         }
-        
+
         .recording-indicator {
             width: 20px;
             height: 20px;
@@ -201,20 +250,20 @@
         }
 
         .exam-waveform-container .wave-bar.active {
-            background: linear-gradient(to top, 
-                rgba(16, 185, 129, 0.8) 0%, 
-                rgba(16, 185, 129, 0.9) 30%, 
-                rgba(52, 211, 153, 1) 60%, 
+            background: linear-gradient(to top,
+                rgba(16, 185, 129, 0.8) 0%,
+                rgba(16, 185, 129, 0.9) 30%,
+                rgba(52, 211, 153, 1) 60%,
                 rgba(34, 197, 94, 1) 100%);
             animation: wave-pulse 0.4s ease-in-out;
             box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
         }
 
         @keyframes wave-pulse {
-            0%, 100% { 
+            0%, 100% {
                 transform: scaleY(1) scaleX(1);
             }
-            50% { 
+            50% {
                 transform: scaleY(1.6) scaleX(1.1);
             }
         }
@@ -226,14 +275,187 @@
             font-weight: 500;
         }
 
+        /* PDF Container Styles */
+        .pdf-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+
+        .pdf-container iframe {
+            display: block;
+            width: 100%;
+        }
+
+        /* Tablet Portrait & Small Laptop */
+        @media (max-width: 1024px) {
+            .phase-container {
+                max-width: 100%;
+                padding: 30px 20px;
+            }
+
+            .phase-container.two-column {
+                max-width: 100%;
+            }
+
+            .phase-left-content {
+                min-width: 240px;
+                max-width: 320px;
+                padding: 15px;
+            }
+
+            .countdown-display {
+                font-size: 2rem;
+            }
+
+            .question-number {
+                font-size: 1.5rem;
+            }
+
+            .phase-title {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Tablet & Mobile */
         @media (max-width: 768px) {
+            .exam-header {
+                padding: 10px 15px;
+                flex-wrap: wrap;
+            }
+
+            .exam-main {
+                padding: 15px;
+            }
+
+            .phase-container {
+                padding: 20px 15px;
+            }
+
             .exam-waveform-container .waveform {
                 min-width: 250px;
                 height: 50px;
             }
-            
+
             .exam-waveform-container .wave-bar {
                 width: 3px;
+            }
+
+            /* Stack layout on mobile */
+            .phase-container.two-column {
+                flex-direction: column;
+                height: auto;
+                max-height: none;
+            }
+
+            .phase-left-content {
+                order: 2;
+                max-width: 100%;
+                min-width: 100%;
+                padding: 20px;
+            }
+
+            .phase-right-content {
+                order: 1;
+                min-height: 400px;
+            }
+
+            .phase-right-content .pdf-container iframe {
+                height: 400px !important;
+                min-height: 400px;
+            }
+
+            .countdown-display {
+                font-size: 1.8rem;
+            }
+
+            .question-number {
+                font-size: 1.3rem;
+            }
+
+            .phase-title {
+                font-size: 1rem;
+            }
+        }
+
+        /* Mobile Small */
+        @media (max-width: 480px) {
+            .exam-header {
+                padding: 10px;
+            }
+
+            .exam-title h1 {
+                font-size: 1.2rem;
+            }
+
+            .exam-title small {
+                font-size: 0.8rem;
+            }
+
+            .exam-main {
+                padding: 10px;
+            }
+
+            .phase-container {
+                padding: 15px 10px;
+            }
+
+            .countdown-display {
+                font-size: 1.5rem;
+                margin: 20px 0;
+            }
+
+            .question-number {
+                font-size: 1.1rem;
+            }
+
+            .phase-title {
+                font-size: 0.95rem;
+            }
+
+            .recording-status {
+                font-size: 0.85rem;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+
+            .exam-waveform-container .waveform {
+                min-width: 200px;
+                height: 40px;
+            }
+
+            .phase-right-content .pdf-container iframe {
+                height: 300px !important;
+                min-height: 300px;
+            }
+        }
+
+        /* Large Desktop */
+        @media (min-width: 1400px) {
+            .phase-container {
+                padding: 50px;
+            }
+
+            .phase-left-content {
+                padding: 30px;
+                min-width: 320px;
+                max-width: 400px;
+            }
+
+            .countdown-display {
+                font-size: 3rem;
+            }
+
+            .question-number {
+                font-size: 2.2rem;
+            }
+
+            .phase-title {
+                font-size: 1.4rem;
             }
         }
     </style>
@@ -300,14 +522,15 @@
 
                     <!-- Question Info after random -->
                     <div id="questionInfoSection" class="hidden" style="margin-top: 20px;">
-                        <div class="question-number">
-                            Mã đề: <span id="questionCode">--</span>
-                        </div>
-
-                        <!-- PDF Viewer -->
-                        <div style="margin: 20px 0;">
-                            <h3><i class="fas fa-file-pdf"></i> Nội dung đề thi</h3>
-                            <iframe id="pdfViewer" width="100%" height="500px" frameborder="0" style="border: 2px solid var(--border-color); border-radius: var(--border-radius);"></iframe>
+                        <div class="alert alert-success" style="padding: 30px; text-align: center;">
+                            <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--success-color); margin-bottom: 15px;"></i>
+                            <h3 style="color: var(--success-color); margin-bottom: 10px;">Đã được phân đề thi</h3>
+                            <div class="question-number" style="margin: 20px 0;">
+                                Mã đề: <span id="questionCode">--</span>
+                            </div>
+                            <p style="font-size: 0.95rem; margin-top: 15px; color: var(--text-secondary);">
+                                <i class="fas fa-info-circle"></i> Nội dung đề thi sẽ được hiển thị sau khi bạn click <strong>"Bắt Đầu Làm Bài"</strong>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -333,72 +556,88 @@
             </div>
 
             <!-- Preparation Phase -->
-            <div id="preparationPhase" class="phase-container hidden">
-                <div class="phase-title">
-                    <i class="fas fa-book-open"></i>
-                    Thời Gian Chuẩn Bị
-                </div>
-                <div class="question-number">
-                    Mã đề: <span id="prepQuestionCode">--</span>
+            <div id="preparationPhase" class="phase-container two-column hidden">
+                <!-- Left Content -->
+                <div class="phase-left-content">
+                    <div class="phase-title">
+                        <i class="fas fa-book-open"></i>
+                        Thời Gian Chuẩn Bị
+                    </div>
+                    <div class="question-number">
+                        Mã đề: <span id="prepQuestionCode">--</span>
+                    </div>
+
+                    <div class="countdown-display" id="preparationCountdown">
+                        05:00
+                    </div>
+                    <p>Hãy suy nghĩ và chuẩn bị nội dung trước khi bắt đầu ghi âm</p>
+
+                    <div class="early-start-section" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                        <p class="text-secondary">Đã sẵn sàng? Bạn có thể bắt đầu ghi âm ngay bây giờ</p>
+                        <button class="btn btn-success" id="earlyStartBtn" onclick="confirmEarlyStart()">
+                            <i class="fas fa-play"></i>
+                            Bắt Đầu Ghi Âm Sớm
+                        </button>
+                    </div>
                 </div>
 
-                <!-- PDF Viewer in Preparation -->
-                <div style="margin: 20px 0;">
-                    <iframe id="prepPdfViewer" width="100%" height="400px" frameborder="0" style="border: 2px solid var(--border-color); border-radius: var(--border-radius);"></iframe>
-                </div>
-
-                <div class="countdown-display" id="preparationCountdown">
-                    05:00
-                </div>
-                <p>Hãy suy nghĩ và chuẩn bị nội dung trước khi bắt đầu ghi âm</p>
-                
-                <div class="early-start-section" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-                    <p class="text-secondary">Đã sẵn sàng? Bạn có thể bắt đầu ghi âm ngay bây giờ</p>
-                    <button class="btn btn-success" id="earlyStartBtn" onclick="confirmEarlyStart()">
-                        <i class="fas fa-play"></i>
-                        Bắt Đầu Ghi Âm Sớm
-                    </button>
+                <!-- Right Content - PDF Viewer -->
+                <div class="phase-right-content">
+                    <div class="pdf-container">
+                        <iframe
+                            id="prepPdfViewer"
+                            width="100%"
+                            frameborder="0"
+                            style="border: none; background: white;">
+                        </iframe>
+                    </div>
                 </div>
             </div>
 
             <!-- Recording Phase -->
-            <div id="recordingPhase" class="phase-container hidden">
-                <div class="phase-title">
-                    <i class="fas fa-microphone"></i>
-                    Đang Ghi Âm Bài Làm
-                </div>
-                <div class="question-number">
-                    Mã đề: <span id="recordQuestionCode">--</span>
-                </div>
-
-                <!-- PDF Viewer in Recording -->
-                <div style="margin: 20px 0;">
-                    <iframe id="recordPdfViewer" width="100%" height="300px" frameborder="0" style="border: 2px solid var(--border-color); border-radius: var(--border-radius);"></iframe>
-                </div>
-
-                <div class="countdown-display" id="recordingCountdown">
-                    05:00
-                </div>
-                
-                <div class="recording-status">
-                    <div class="recording-indicator recording" id="recordingIndicator"></div>
-                    <span>Đang ghi âm...</span>
-                </div>
-
-                <!-- Audio Waveform Visualization -->
-                <div class="exam-waveform-container">
-                    <div class="waveform" id="examWaveform">
-                        <!-- Waveform bars will be generated by JavaScript -->
+            <div id="recordingPhase" class="phase-container two-column hidden">
+                <!-- Left Content -->
+                <div class="phase-left-content">
+                    <div class="question-number">
+                        Mã đề: <span id="recordQuestionCode">--</span>
                     </div>
-                    <p id="examAudioStatus">Chưa có tín hiệu âm thanh</p>
+
+                    <div class="countdown-display" id="recordingCountdown">
+                        05:00
+                    </div>
+
+                    <div class="recording-status">
+                        <div class="recording-indicator recording" id="recordingIndicator"></div>
+                        <span>Đang ghi âm...</span>
+                    </div>
+
+                    <!-- Audio Waveform Visualization -->
+                    <div class="exam-waveform-container">
+                        <div class="waveform" id="examWaveform">
+                            <!-- Waveform bars will be generated by JavaScript -->
+                        </div>
+                        <p id="examAudioStatus">Chưa có tín hiệu âm thanh</p>
+                    </div>
+
+                    <div class="submit-section">
+                        <p class="text-secondary">Bạn có thể nộp bài sớm nếu đã hoàn thành</p>
+                        <button class="btn btn-success" id="earlySubmitBtn" onclick="confirmEarlySubmit()">
+                            <i class="fas fa-check"></i>
+                            Nộp Bài Sớm
+                        </button>
+                    </div>
                 </div>
 
-                <div class="submit-section">
-                    <p class="text-secondary">Bạn có thể nộp bài sớm nếu đã hoàn thành</p>
-                    <button class="btn btn-success" id="earlySubmitBtn" onclick="confirmEarlySubmit()">
-                        <i class="fas fa-check"></i>
-                        Nộp Bài Sớm
-                    </button>
+                <!-- Right Content - PDF Viewer -->
+                <div class="phase-right-content">
+                    <div class="pdf-container">
+                        <iframe
+                            id="recordPdfViewer"
+                            width="100%"
+                            frameborder="0"
+                            style="border: none; background: white;">
+                        </iframe>
+                    </div>
                 </div>
             </div>
 

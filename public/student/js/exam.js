@@ -157,8 +157,14 @@ async function loadExamData() {
         // Determine current phase based on exam status
         switch (examData.status) {
             case 'waiting':
-                // Hiển thị trang exam_info để học sinh random đề và bắt đầu
-                showPhase('exam_info');
+                if (examData.question) {
+                    // Đã có đề thi (từ dashboard), tự động bắt đầu thi ngay
+                    Utils.showAlert('Đang bắt đầu bài thi...', 'info');
+                    await startExam();
+                } else {
+                    // Chưa có đề, hiển thị trang exam_info để random đề
+                    showPhase('exam_info');
+                }
                 break;
             case 'in_progress':
                 // Calculate if we're in preparation or recording phase
@@ -207,9 +213,15 @@ function updateExamInfo() {
         currentQuestion = examData.question;
         updateQuestionDisplay();
 
+        // Disable random button since question already exists
+        const randomBtn = document.getElementById('randomQuestionBtn');
+        randomBtn.disabled = true;
+        randomBtn.innerHTML = '<i class="fas fa-check"></i> Đã Random Đề Thi';
+
         // Enable start button if question already exists and status is waiting
         if (examData.status === 'waiting') {
             document.getElementById('startExamBtn').disabled = false;
+            document.querySelector('#startExamBtn + small').textContent = 'Sẵn sàng để bắt đầu làm bài';
         }
     }
 }
@@ -226,9 +238,9 @@ function updateQuestionDisplay() {
     document.getElementById('recordQuestionCode').textContent = questionCode;
     document.getElementById('completedQuestionCode').textContent = questionCode;
 
-    // Update PDF viewers
-    if (pdfUrl) {
-        document.getElementById('pdfViewer').src = pdfUrl;
+    // Only update PDF viewers if not in exam_info phase
+    // PDF should only be shown after student clicks "Start Exam"
+    if (pdfUrl && currentPhase !== 'exam_info') {
         document.getElementById('prepPdfViewer').src = pdfUrl;
         document.getElementById('recordPdfViewer').src = pdfUrl;
     }
@@ -311,8 +323,10 @@ function showPhase(phase) {
 
 // Random Question Function
 async function randomQuestion() {
+    const randomBtn = document.getElementById('randomQuestionBtn');
+    let success = false;
+
     try {
-        const randomBtn = document.getElementById('randomQuestionBtn');
         Utils.showLoading(randomBtn, 'Đang random...');
 
         const response = await fetch(`/api/student/exam/${participantId}/random-question`, {
@@ -336,16 +350,21 @@ async function randomQuestion() {
 
         // Enable start exam button after random
         document.getElementById('startExamBtn').disabled = false;
+        document.querySelector('#startExamBtn + small').textContent = 'Sẵn sàng để bắt đầu làm bài';
 
         // Disable random button after successfully randomizing
-        document.getElementById('randomQuestionBtn').disabled = true;
-        document.getElementById('randomQuestionBtn').innerHTML = '<i class="fas fa-check"></i> Đã Random Đề Thi';
+        randomBtn.disabled = true;
+        randomBtn.innerHTML = '<i class="fas fa-check"></i> Đã Random Đề Thi';
+
+        success = true;
 
     } catch (error) {
         console.error('Random question error:', error);
         Utils.showAlert(error.message, 'error');
-    } finally {
-        Utils.hideLoading(document.getElementById('randomQuestionBtn'), '<i class="fas fa-random"></i> Random Đề Thi');
+        // Only restore button if failed
+        if (!success) {
+            Utils.hideLoading(randomBtn, '<i class="fas fa-random"></i> Random Đề Thi');
+        }
     }
 }
 
@@ -367,17 +386,20 @@ function confirmStartExam() {
 
 async function startExam() {
     try {
-        closeConfirmModal();
-        
+        // Close modal if it was opened
+        if (confirmModal && !confirmModal.classList.contains('hidden')) {
+            closeConfirmModal();
+        }
+
         // Reset early start variables
         isEarlyStart = false;
         remainingTotalTime = null;
-        
+
         // Clear any existing countdown
         if (countdownInterval) {
             clearInterval(countdownInterval);
         }
-        
+
         const response = await fetch(`/api/student/exam/${participantId}/start`, {
             method: 'POST',
             headers: {
@@ -385,22 +407,29 @@ async function startExam() {
                 'Authorization': `Bearer ${Auth.getToken()}`
             }
         });
-        
+
         const result = await response.json();
-        
+
         if (!result.success) {
             throw new Error(result.error || 'Không thể bắt đầu bài thi');
         }
-        
+
         examStartTime = new Date(result.data.start_time).getTime();
         examData.status = 'in_progress';
         examData.start_time = result.data.start_time;
-        
+
         showPhase('preparation');
+
+        // Load PDF into preparation and recording phases
+        if (currentQuestion && currentQuestion.pdf_drive_url) {
+            document.getElementById('prepPdfViewer').src = currentQuestion.pdf_drive_url;
+            document.getElementById('recordPdfViewer').src = currentQuestion.pdf_drive_url;
+        }
+
         startPreparationCountdown(examData.preparation_time);
-        
+
         Utils.showAlert('Bài thi đã bắt đầu. Thời gian chuẩn bị: ' + Math.floor(examData.preparation_time / 60) + ' phút', 'success');
-        
+
     } catch (error) {
         console.error('Start exam error:', error);
         Utils.showAlert(error.message, 'error');

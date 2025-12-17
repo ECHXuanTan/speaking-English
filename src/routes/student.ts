@@ -91,7 +91,7 @@ router.get('/exams', requireStudent, async (req: Request, res: Response) => {
           participant_id: exam.id,
           exam_id: exam.exam_id,
           exam_name: exam.exam.exam_name,
-          question_number: exam.question_number,
+          question: exam.question, // Full question object with question_code, pdf_drive_url, etc.
           status: exam.status,
           preparation_time: exam.exam.preparation_time,
           exam_duration: exam.exam.exam_duration,
@@ -159,7 +159,7 @@ router.get('/exam/:participantId', requireStudent, validate(validateAudioSubmiss
           participant_id: examInfo.id,
           exam_id: examInfo.exam_id,
           exam_name: examInfo.exam.exam_name,
-          question_number: examInfo.question_number,
+          question: examInfo.question, // Full question object with question_code, pdf_drive_url
           status: examInfo.status,
           preparation_time: examInfo.exam.preparation_time,
           exam_duration: examInfo.exam.exam_duration,

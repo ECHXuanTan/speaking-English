@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npm run dev:backend:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": [],
     "ask": []
