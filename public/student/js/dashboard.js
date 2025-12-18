@@ -2,6 +2,8 @@
 
 let socket = null;
 
+let allExams = []; // Store all exams for filtering
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Check authentication
     if (!Auth.isAuthenticated()) {
@@ -13,9 +15,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     await initializeDashboard();
     initializeSocket();
     loadExams();
-    
+
     // Initialize microphone test
     initMicrophoneTest();
+
+    // Setup filter and search listeners
+    setupFilterListeners();
 });
 
 async function initializeDashboard() {
@@ -62,12 +67,13 @@ function initializeSocket() {
 
 async function loadExams() {
     const examsList = document.getElementById('examsList');
-    
+
     try {
         const response = await Utils.apiRequest('/api/student/exams');
-        
+
         if (response.success && response.data && response.data.exams) {
-            displayExams(response.data.exams);
+            allExams = response.data.exams; // Store for filtering
+            displayExams(allExams);
         } else {
             examsList.innerHTML = `
                 <div class="empty-state">
@@ -115,30 +121,28 @@ function displayExams(exams) {
                     ${getExamStatusText(exam.status)}
                 </span>
             </div>
-            <div class="exam-details">
-                <div class="exam-info">
-                    <div class="info-item">
-                        <i class="fas fa-list-ol"></i>
-                        <span>Mã đề: ${exam.question ? exam.question.question_code : 'Chưa bốc đề'}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-clock"></i>
-                        <span>Thời gian chuẩn bị: ${Math.floor(exam.preparation_time / 60)} phút</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-hourglass-half"></i>
-                        <span>Thời gian thi: ${Math.floor(exam.exam_duration / 60)} phút</span>
-                    </div>
-                    ${exam.start_time ? `
-                        <div class="info-item">
-                            <i class="fas fa-calendar"></i>
-                            <span>Bắt đầu: ${new Date(exam.start_time).toLocaleString('vi-VN')}</span>
-                        </div>
-                    ` : ''}
+            <div class="exam-info">
+                <div class="info-item">
+                    <i class="fas fa-list-ol"></i>
+                    <span>Mã đề: ${exam.question ? exam.question.question_code : 'Chưa bốc đề'}</span>
                 </div>
-                <div class="exam-actions">
-                    ${getExamActions(exam)}
+                <div class="info-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Thời gian chuẩn bị: ${Math.floor(exam.preparation_time / 60)} phút</span>
                 </div>
+                <div class="info-item">
+                    <i class="fas fa-hourglass-half"></i>
+                    <span>Thời gian thi: ${Math.floor(exam.exam_duration / 60)} phút</span>
+                </div>
+                ${exam.start_time ? `
+                    <div class="info-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>Bắt đầu: ${new Date(exam.start_time).toLocaleString('vi-VN')}</span>
+                    </div>
+                ` : ''}
+            </div>
+            <div class="exam-actions">
+                ${getExamActions(exam)}
             </div>
         </div>
     `).join('');
@@ -775,6 +779,38 @@ function startRecording() {
 
 function stopRecording() {
     micTest.stopRecording();
+}
+
+// Setup filter and search listeners
+function setupFilterListeners() {
+    const searchInput = document.getElementById('examSearchInput');
+    const statusFilter = document.getElementById('examStatusFilter');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterExams);
+    }
+
+    if (statusFilter) {
+        statusFilter.addEventListener('change', filterExams);
+    }
+}
+
+// Filter exams based on search and status
+function filterExams() {
+    const searchTerm = document.getElementById('examSearchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('examStatusFilter').value;
+
+    let filteredExams = allExams.filter(exam => {
+        const matchesSearch = !searchTerm ||
+            exam.exam_name.toLowerCase().includes(searchTerm) ||
+            (exam.question && exam.question.question_code.toLowerCase().includes(searchTerm));
+
+        const matchesStatus = !statusFilter || exam.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
+    });
+
+    displayExams(filteredExams);
 }
 
 // Cleanup on page unload

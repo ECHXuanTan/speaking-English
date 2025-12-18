@@ -29,7 +29,7 @@
         <main class="main-content">
             <div id="alertContainer"></div>
 
-            <!-- Student Dashboard Section -->
+            <!-- Student Dashboard Section with Two Columns -->
             <div class="student-dashboard-section">
                 <!-- Student Profile Card -->
                 <div class="profile-card">
@@ -47,20 +47,38 @@
                     </div>
                 </div>
 
-                <!-- Available Exams -->
-                <div class="exams-section">
-                    <h2><i class="fas fa-clipboard-list"></i> Kỳ Thi Của Bạn</h2>
-                    <div id="examsList" class="exams-list">
-                        <div class="loading-card">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <p>Đang tải danh sách kỳ thi...</p>
+                <!-- Two Column Layout -->
+                <div class="dashboard-two-columns">
+                    <!-- Left Column: Exams -->
+                    <div class="exams-section">
+                        <h2><i class="fas fa-clipboard-list"></i> Kỳ Thi Của Bạn</h2>
+
+                        <!-- Search and Filter -->
+                        <div class="exams-filter-section">
+                            <div class="search-box-compact">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="examSearchInput" placeholder="Tìm kiếm kỳ thi...">
+                            </div>
+                            <select id="examStatusFilter" class="form-control-compact">
+                                <option value="">Tất cả</option>
+                                <option value="waiting">Chờ làm bài</option>
+                                <option value="in_progress">Đang làm</option>
+                                <option value="completed">Hoàn thành</option>
+                            </select>
+                        </div>
+
+                        <div id="examsList" class="exams-list">
+                            <div class="loading-card">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Đang tải danh sách kỳ thi...</p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Microphone Test Container (moved inside exams section) -->
-                    <div class="microphone-test-container">
+                    <!-- Right Column: Microphone Test -->
+                    <div class="microphone-test-section">
                         <h3><i class="fas fa-microphone"></i> Test Microphone</h3>
-                        
+
                         <!-- Permission Warning (hidden by default) -->
                         <div id="permissionWarning" class="permission-warning hidden">
                             <i class="fas fa-exclamation-triangle"></i>
@@ -96,7 +114,7 @@
                                     <i class="fas fa-microphone"></i>
                                     Test Mic
                                 </button>
-                                
+
                                 <button class="btn btn-danger hidden" id="stopRecordBtn" onclick="stopRecording()" disabled>
                                     <i class="fas fa-stop"></i>
                                     Dừng Ghi

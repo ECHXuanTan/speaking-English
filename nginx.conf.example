@@ -1,0 +1,83 @@
+server {
+    listen 80;
+    listen [::]:80;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+
+    # SSL certificates (will be auto-added by certbot)
+    # ssl_certificate /etc/letsencrypt/live/exam.ptnk.edu.vn/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/exam.ptnk.edu.vn/privkey.pem;
+
+    server_name exam.ptnk.edu.vn;  # Change this to your domain
+
+    # Logs
+    access_log /var/log/nginx/exam.ptnk.edu.vn.access.log;
+    error_log /var/log/nginx/exam.ptnk.edu.vn.error.log;
+
+    # Allow /.well-known for SSL cert validation
+    location ~ /.well-known {
+        auth_basic off;
+        allow all;
+    }
+
+    # Proxy API requests to backend on port 3001
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001/api/;
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Server $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host $http_host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_pass_request_headers on;
+        proxy_max_temp_file_size 0;
+        proxy_connect_timeout 900;
+        proxy_send_timeout 900;
+        proxy_read_timeout 900;
+        proxy_buffer_size 128k;
+        proxy_buffers 4 256k;
+        proxy_busy_buffers_size 256k;
+        proxy_temp_file_write_size 256k;
+    }
+
+    # Proxy Socket.IO connections
+    location /socket.io/ {
+        proxy_pass http://127.0.0.1:3001/socket.io/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+
+        # WebSocket timeout settings
+        proxy_read_timeout 86400;
+        proxy_send_timeout 86400;
+    }
+
+    # Serve static files
+    location / {
+        root /home/speaking-english/public;
+        try_files $uri $uri/ /index.html;
+        index index.html;
+    }
+
+    # Serve uploaded audio files
+    location /uploads/ {
+        alias /home/speaking-english/uploads/;
+        expires 1d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss;
+}

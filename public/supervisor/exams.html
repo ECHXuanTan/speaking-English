@@ -120,15 +120,21 @@
                         <small class="form-text">Ví dụ: Thi nói tiếng Anh lớp 12A1</small>
                     </div>
 
+                    <div class="form-group">
+                        <label for="totalQuestions">Số Lượng Đề *</label>
+                        <input type="number" id="totalQuestions" class="form-control" min="1" max="100" value="10" required>
+                        <small class="form-text">Số lượng đề thi trong kỳ thi (1-100)</small>
+                    </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="preparationTime">Thời Gian Chuẩn Bị (giây) *</label>
-                            <input type="number" id="preparationTime" class="form-control" min="30" max="300" value="60" required>
+                            <input type="number" id="preparationTime" class="form-control" min="0" max="3600" value="60" required>
                         </div>
 
                         <div class="form-group">
                             <label for="examDuration">Thời Gian Thi (giây) *</label>
-                            <input type="number" id="examDuration" class="form-control" min="60" max="1800" value="300" required>
+                            <input type="number" id="examDuration" class="form-control" min="60" max="7200" value="300" required>
                         </div>
                     </div>
 

@@ -245,6 +245,7 @@ function openCreateExamModal() {
     document.getElementById('modalTitle').textContent = 'Tạo Kỳ Thi Mới';
     document.getElementById('examForm').reset();
     document.getElementById('examId').value = '';
+    document.getElementById('totalQuestions').value = 10;
     document.getElementById('preparationTime').value = 60;
     document.getElementById('examDuration').value = 300;
     document.getElementById('examModal').style.display = 'flex';
@@ -257,6 +258,7 @@ function editExam(id) {
     document.getElementById('modalTitle').textContent = 'Sửa Kỳ Thi';
     document.getElementById('examId').value = exam.id;
     document.getElementById('examName').value = exam.exam_name;
+    document.getElementById('totalQuestions').value = exam.total_questions || 10;
     document.getElementById('preparationTime').value = exam.preparation_time;
     document.getElementById('examDuration').value = exam.exam_duration;
     document.getElementById('examStatus').value = exam.status || 'draft';
@@ -274,13 +276,14 @@ async function handleSaveExam(event) {
 
     const formData = {
         exam_name: document.getElementById('examName').value.trim(),
+        total_questions: parseInt(document.getElementById('totalQuestions').value),
         preparation_time: parseInt(document.getElementById('preparationTime').value),
         exam_duration: parseInt(document.getElementById('examDuration').value),
         status: document.getElementById('examStatus').value,
         description: document.getElementById('description').value.trim()
     };
 
-    if (!formData.exam_name || !formData.preparation_time || !formData.exam_duration) {
+    if (!formData.exam_name || !formData.total_questions || !formData.preparation_time || !formData.exam_duration) {
         Utils.showAlert('Vui lòng nhập đầy đủ thông tin bắt buộc', 'warning');
         return;
     }
